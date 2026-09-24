@@ -126,10 +126,8 @@ namespace stencil_detail {
         double* out = output.row(i);
         const std::size_t cols = input.layout.shape.cols;
 
-        // Update boundaries in here so that it uses the same pointer and doesn't throw it away
+        // Update left boundary
         out[0] = curr[0];
-        if (cols > 1) out[cols - 1] = curr[cols - 1];
-        else return;
 
         // Each iteration writes a different cell, all reads use separate storage.
     #ifdef _OPENMP
@@ -139,6 +137,9 @@ namespace stencil_detail {
             out[j] = 0.5 * curr[j]
                 + 0.125 * (above[j] + below[j] + curr[j - 1] + curr[j + 1]);
         }
+        
+        // Update right boundary
+        if (cols > 1) out[cols - 1] = curr[cols - 1];
     }
 
     // Update all interior rows of the output grid using the stencil formula.
