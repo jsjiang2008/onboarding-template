@@ -115,12 +115,6 @@ namespace stencil_detail {
         if (shape.rows > 1) {
             std::copy_n(input.row(shape.rows - 1), shape.cols, output.row(shape.rows - 1));
         }
-        for (std::size_t i = 1; i < shape.rows - 1; ++i) {
-            output(i, 0) = input(i, 0);
-            if (shape.cols > 1) {
-                output(i, shape.cols - 1) = input(i, shape.cols - 1);
-            }
-        }
     }
 
     // Update a single interior row of the output grid using the stencil formula.
@@ -131,6 +125,11 @@ namespace stencil_detail {
         const double* below = input.row(i + 1); 
         double* out = output.row(i);
         const std::size_t cols = input.layout.shape.cols;
+
+        // Update boundaries in here so that it uses the same pointer and doesn't throw it away
+        out[0] = curr[0];
+        if (cols > 1) out[cols - 1] = curr[cols - 1];
+        else return;
 
         // Each iteration writes a different cell, all reads use separate storage.
     #ifdef _OPENMP
@@ -146,8 +145,9 @@ namespace stencil_detail {
     inline void update_interior(ConstGridView input, GridView output) {
         const auto shape = input.layout.shape;
 
-        // If the grid is too small to have an interior, do nothing. The boundaries are already copied.
-        if (shape.rows < 3 || shape.cols < 3) {
+        // If the grid is too small to have an interior, do nothing
+        // Run update interior even if not enough cols for interior except 0, has to update boundaries still
+        if (shape.rows < 3 || shape.cols == 0) {
             return;
         }
 
