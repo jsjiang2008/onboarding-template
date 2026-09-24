@@ -30,10 +30,6 @@ struct BasicGridView {
     T* row(std::size_t i) const {
         return data + i * layout.stride;
     }
-
-    T& operator()(std::size_t i, std::size_t j) const {
-        return row(i)[j];
-    }
 };
 
 // Provide read/write access to existing storage using the templates
